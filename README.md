@@ -11,7 +11,7 @@ Please ensure that the following requirements have been met prior to installing 
 * [Gazebo Harmonic](https://gazebosim.org/docs/harmonic/install)
 * [ardupilot_gazebo for Harmonic](https://github.com/ArduPilot/ardupilot_gazebo)
 * [ArduSub and MAVProxy](https://ardupilot.org/dev/docs/building-setup-linux.html)
-* [MAVROS]()
+* [MAVROS](https://github.com/mavlink/mavros/blob/ros2/docs/installation.md)
 
 ## Running Gazebo
 
