@@ -62,13 +62,6 @@ Change the "control" to the controller matching your option
 
 N.B. for PID you can add extra argument --args -p enable_model:False to use UKF disturbance estimation or True to use known modeled disturbance
 
-Additional information regarding the usage of each model may be found in a model's
-respective directory.
-
-## ROS2 and Colcon
-
-ROS2 users should add `ardupilot_gazebo -b ros2` and `bluerov2_gz` to the colcon workspace and use
-colcon to build and manage the environment.
 
 ## References
 
