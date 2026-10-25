@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>bluerov2_gz</name>
+  <version>1.0</version>
+  <description>BlueROV2 model for Obstacle-avoidance Control</description>
+  <maintainer email="matthew.troy271@gmail.com">Matthew Troy</maintainer>
+  <license>MIT</license>
+  <url type="repository">https://github.com/m4ttroy/bluerov2-obs_avoidance</url>
+  <author>Matthew Troy</author>
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <depend>ros_gz_sim</depend>
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

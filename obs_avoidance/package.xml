@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>obs_avoidance</name>
+  <version>1.0</version>
+  <description>Obstacle-avoidance Control Algorithm for BlueROV2 with Ping-sonar model</description>
+  <maintainer email="matthew.troy271@gmail.com">Matthew Troy</maintainer>
+  <license>MIT</license>
+  <url type="repository">https://github.com/m4ttroy/bluerov2-obs_avoidance</url>
+  <author>Matthew Troy</author>
+  
+  <depend>rclpy</depend>
+
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

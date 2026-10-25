@@ -1,0 +1,406 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <world name="bluerov2_ping">
+
+    <spherical_coordinates>
+      <surface_model>EARTH_WGS84</surface_model>
+      <world_frame_orientation>ENU</world_frame_orientation>
+      <latitude_deg>0.0000</latitude_deg>   <!-- Middle of the ocean (Null Island) -->
+      <longitude_deg>0.0000</longitude_deg>
+      <elevation>0</elevation>
+      <heading_deg>0</heading_deg>
+    </spherical_coordinates>
+
+    <!-- Base Gazebo plugins -->
+    <plugin
+        filename="gz-sim-physics-system"
+        name="gz::sim::systems::Physics">
+    </plugin>
+    <plugin
+        filename="gz-sim-user-commands-system"
+        name="gz::sim::systems::UserCommands">
+    </plugin>
+    <plugin
+        filename="gz-sim-scene-broadcaster-system"
+        name="gz::sim::systems::SceneBroadcaster">
+    </plugin>
+
+    <!-- IMU plugin manages all IMU sensors -->
+    <plugin filename="libgz-sim-imu-system.so"
+            name="gz::sim::systems::Imu">
+    </plugin>
+
+    <!-- Required for gpu_lidar sensor, emulating the Ping sonar sensor -->
+    <plugin
+      filename="gz-sim-sensors-system"
+      name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+
+    <!-- Buoyancy plugin manages buoyancy for all models -->
+    <plugin
+        filename="gz-sim-buoyancy-system"
+        name="gz::sim::systems::Buoyancy">
+      <!-- Fluid density is 1 (air) above 0 and 1000 (water) below 0 -->
+      <graded_buoyancy>
+        <default_density>1000</default_density>
+        <density_change>
+          <above_depth>0</above_depth>
+          <density>1</density>
+        </density_change>
+      </graded_buoyancy>
+      <!-- Enable by model name -->
+      <enable>bluerov2_ping</enable>
+    </plugin>
+
+    <!-- Hydrodynamics and water current -->
+    <plugin
+        filename="gz-sim-hydrodynamics-system"
+        name="gz::sim::systems::Hydrodynamics">
+
+      <!-- Initial water current: 0.3 m/s along world +X -->
+      <default_current>0.15 -0.2 0.2</default_current>
+
+      <!-- Apply hydrodynamic effects to the ROV -->
+      <enable>bluerov2_ping</enable>
+
+    </plugin>
+
+    <include>
+      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Sun</uri>
+    </include>
+
+    <!-- 8 x 8 x 8 m underwater tank -->
+    <model name="underwater_tank">
+      <static>true</static>
+      <pose>4.0 4.0 -4 0 0 0</pose>
+      <link name="floor">
+        <pose>0 0 -4.0 0 0 0</pose>
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>9.4 9.4 0.2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>9.4 9.4 0.2</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.18 0.25 0.30 1</ambient>
+            <diffuse>0.18 0.25 0.30 1</diffuse>
+            <specular>0.25 0.25 0.25 1</specular>
+          </material>
+        </visual>
+      </link>
+
+      <!-- Left wall -->
+      <link name="wall_left">
+        <pose>-4.6 0 0 0 0 0</pose>
+        <collision name="collision">
+          <geometry><box><size>0.2 9.4 8</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>0.2 9.4 8</size></box></geometry>
+          <transparency>0.35</transparency>
+          <material>
+            <ambient>0.25 0.75 0.85 0.35</ambient>
+            <diffuse>0.25 0.75 0.85 0.35</diffuse>
+            <specular>0.8 0.9 1.0 0.35</specular>
+          </material>
+        </visual>
+      </link>
+
+      <!-- Right wall -->
+      <link name="wall_right">
+        <pose>4.6 0 0 0 0 0</pose>
+        <collision name="collision">
+          <geometry><box><size>0.2 9.4 8</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>0.2 9.4 8</size></box></geometry>
+          <transparency>0.35</transparency>
+          <material>
+            <ambient>0.25 0.75 0.85 0.35</ambient>
+            <diffuse>0.25 0.75 0.85 0.35</diffuse>
+            <specular>0.8 0.9 1.0 0.35</specular>
+          </material>
+        </visual>
+      </link>
+
+      <!-- Front wall -->
+      <link name="wall_front">
+        <pose>0 -4.6 0 0 0 0</pose>
+        <collision name="collision">
+          <geometry><box><size>9.4 0.2 8</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>9.4 0.2 8</size></box></geometry>
+          <transparency>0.35</transparency>
+          <material>
+            <ambient>0.25 0.75 0.85 0.35</ambient>
+            <diffuse>0.25 0.75 0.85 0.35</diffuse>
+            <specular>0.8 0.9 1.0 0.35</specular>
+          </material>
+        </visual>
+      </link>
+
+      <!-- Back wall -->
+      <link name="wall_back">
+        <pose>0 4.6 0 0 0 0</pose>
+        <collision name="collision">
+          <geometry><box><size>9.4 0.2 8</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>9.4 0.2 8</size></box></geometry>
+          <transparency>0.35</transparency>
+          <material>
+            <ambient>0.25 0.75 0.85 0.35</ambient>
+            <diffuse>0.25 0.75 0.85 0.35</diffuse>
+            <specular>0.8 0.9 1.0 0.35</specular>
+          </material>
+        </visual>
+      </link>
+
+      <!-- Interior tank lighting -->
+      <light name="tank_light" type="point">
+        <pose>0 0 3 0 0 0</pose>
+        <diffuse>0.75 0.90 1.0 1</diffuse>
+        <specular>0.4 0.5 0.6 1</specular>
+        <attenuation>
+          <range>20</range>
+          <constant>0.5</constant>
+          <linear>0.02</linear>
+          <quadratic>0.002</quadratic>
+        </attenuation>
+        <cast_shadows>true</cast_shadows>
+      </light>
+    </model>
+
+    <!-- BlueROV2 Ping -->
+    <include>
+      <uri>model://bluerov2_ping</uri>
+      <pose>4.5 4.5 -1 0 0 0</pose>
+    </include>
+
+    <!-- Obstacles Position -->
+    <model name="cylinder_obstacle_0">
+      <static>true</static>
+      <pose>6 2 -5 0 0 0</pose>
+      <link name="obstacle_link">
+        <collision name="collision">
+          <geometry>
+            <cylinder>
+              <radius>0.125</radius>
+              <length>3.0</length>
+            </cylinder>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <cylinder>
+              <radius>0.125</radius>
+              <length>3.0</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0.8 0.2 0.2 1</ambient>
+            <diffuse>0.8 0.2 0.2 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="cylinder_obstacle_1">
+      <static>true</static>
+      <pose>2 1.9 -5 0 0 0</pose>
+      <link name="obstacle_link">
+        <collision name="collision">
+          <geometry>
+            <cylinder>
+              <radius>0.125</radius>
+              <length>3.0</length>
+            </cylinder>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <cylinder>
+              <radius>0.125</radius>
+              <length>3.0</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0.8 0.2 0.2 1</ambient>
+            <diffuse>0.8 0.2 0.2 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="cylinder_obstacle_2">
+      <static>true</static>
+      <pose>3.5 3.85 -5 0 0 0</pose>
+      <link name="obstacle_link">
+        <collision name="collision">
+          <geometry>
+            <cylinder>
+              <radius>0.125</radius>
+              <length>3.0</length>
+            </cylinder>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <cylinder>
+              <radius>0.125</radius>
+              <length>3.0</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0.8 0.2 0.2 1</ambient>
+            <diffuse>0.8 0.2 0.2 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="cylinder_obstacle_3">
+      <static>true</static>
+      <pose>4.5 4.15 -5 0 0 0</pose>
+      <link name="obstacle_link">
+        <collision name="collision">
+          <geometry>
+            <cylinder>
+              <radius>0.125</radius>
+              <length>3.0</length>
+            </cylinder>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <cylinder>
+              <radius>0.125</radius>
+              <length>3.0</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0.8 0.2 0.2 1</ambient>
+            <diffuse>0.8 0.2 0.2 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="cylinder_obstacle_4">
+      <static>true</static>
+      <pose>2 5.85 -5 0 0 0</pose>
+      <link name="obstacle_link">
+        <collision name="collision">
+          <geometry>
+            <cylinder>
+              <radius>0.125</radius>
+              <length>3.0</length>
+            </cylinder>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <cylinder>
+              <radius>0.125</radius>
+              <length>3.0</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0.8 0.2 0.2 1</ambient>
+            <diffuse>0.8 0.2 0.2 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="cylinder_obstacle_5">
+      <static>true</static>
+      <pose>6 6.15 -5 0 0 0</pose>
+      <link name="obstacle_link">
+        <collision name="collision">
+          <geometry>
+            <cylinder>
+              <radius>0.125</radius>
+              <length>3.0</length>
+            </cylinder>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <cylinder>
+              <radius>0.125</radius>
+              <length>3.0</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0.8 0.2 0.2 1</ambient>
+            <diffuse>0.8 0.2 0.2 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="cylinder_obstacle_6">
+      <static>true</static>
+      <pose>4 8.30 -5 0 0 0</pose>
+      <link name="obstacle_link">
+        <collision name="collision">
+          <geometry>
+            <cylinder>
+              <radius>0.125</radius>
+              <length>3.0</length>
+            </cylinder>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <cylinder>
+              <radius>0.125</radius>
+              <length>3.0</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0.8 0.2 0.2 1</ambient>
+            <diffuse>0.8 0.2 0.2 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="cylinder_obstacle_7">
+      <static>true</static>
+      <pose>4.05 8.0 -5 0 0 0</pose>
+      <link name="obstacle_link">
+        <collision name="collision">
+          <geometry>
+            <cylinder>
+              <radius>0.125</radius>
+              <length>3.0</length>
+            </cylinder>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <cylinder>
+              <radius>0.125</radius>
+              <length>3.0</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0.8 0.2 0.2 1</ambient>
+            <diffuse>0.8 0.2 0.2 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+  </world>
+</sdf>
