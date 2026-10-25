@@ -4,8 +4,6 @@ This is an obstacle-avoidance control experiment using gazebo harmonic simulatio
 
 The BlueROV2 model already include the BuoyancyPlugin, HydrodynamicsPlugin and ThrusterPlugin to better simulate the implementation.
 
-![bluerov2_gz](images/bluerov2.png)
-
 ## Requirements
 
 Please ensure that the following requirements have been met prior to installing the project
