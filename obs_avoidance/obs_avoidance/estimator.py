@@ -127,7 +127,7 @@ class UKF_Estimator:
         Q[self.idx_wB, self.idx_wB]             = np.eye(3) * 1e-4
         Q[self.idx_ba, self.idx_ba]             = np.eye(3) * 1e-6 * dt
         Q[self.idx_bg, self.idx_bg]             = np.eye(3) * 1e-6 * dt
-        Q[self.idx_tau_dist, self.idx_tau_dist] = np.eye(6) * 1e-3 * dt  # Disturbance random walk process noise
+        Q[self.idx_tau_dist, self.idx_tau_dist] = np.eye(6) * 1e-3 * dt 
         return Q
 
     def pack_state(self, p_N, q_N, v_B, w_B, b_a, b_g, tau_dist):
@@ -234,7 +234,6 @@ class UKF_Estimator:
         tau_control = np.asarray(tau_control, dtype=np.float64).reshape(6)
         tau_dist = np.asarray(tau_dist, dtype=np.float64).reshape(6)
 
-        # Compute Coriolis, Damping, and Restoring forces using geometry helper
         gamma = np.asarray(self.compute_gamma(nu_B.reshape(-1, 1)), dtype=np.float64).reshape(6)
         
         # Fossen Equation: M * nu_dot = tau_control + tau_dist + gamma(nu)
@@ -248,25 +247,17 @@ class UKF_Estimator:
         nu_B = np.concatenate([v_B, w_B])
         nu_cmd = np.asarray(nu_cmd, dtype=np.float64).reshape(6)
 
-        # 1. Bridge ArduSub velocity setpoint to effective force using Kp
+        # Bridge ArduSub velocity setpoint to effective force using Kp
         tau_control = self.Kp_vel @ (nu_cmd - nu_B)
 
-        # 2. Kinematics Propagation
         pN_next = p_N + dt * (R_NB @ v_B)
         dq = self._quat_from_rotvec(w_B * dt)
         qN_next = self._normalize_quaternion(self._quat_multiply(q_N, dq))
-
-        # 3. Kinetics Propagation (Fossen Dynamics + Lumped Disturbance)
         nu_dot_B = self.fossen_acceleration(nu_B, tau_control, tau_dist)
         vB_next = v_B + dt * nu_dot_B[:3]
         wB_next = w_B + dt * nu_dot_B[3:]
 
-        # 4. Biases and Disturbance Random Walk
-        ba_next = b_a
-        bg_next = b_g
-        tau_dist_next = tau_dist 
-
-        return self.pack_state(pN_next, qN_next, vB_next, wB_next, ba_next, bg_next, tau_dist_next)
+        return self.pack_state(pN_next, qN_next, vB_next, wB_next, b_a, b_g, tau_dist)
 
     def ukf_predict(self, x, P, dt, nu_cmd):
         sigma = self.generate_sigma_points(x, P)
@@ -291,7 +282,6 @@ class UKF_Estimator:
         g_B = R_NB.T @ g_N
 
         nu_B = np.concatenate([v_B, w_B])
-        # Approximate kinematic acceleration sensed by IMU body frame
         a_dot = self.fossen_acceleration(nu_B, np.zeros(6), tau_dist)[:3]
         
         a_meas_pred = a_dot + np.cross(w_B, v_B) - g_B + b_a
@@ -301,7 +291,6 @@ class UKF_Estimator:
 
     def gt_pose_measurement_model(self, state, q_ref):
         p_N, q_N, _, _, _, _, _ = self.unpack_state(state)
-        # Return position and orientation error as rotvec for smooth UKF update
         q_err_rotvec = self._quat_error_rotvec(q_ref, q_N)
         return np.concatenate([p_N, q_err_rotvec])
 
@@ -328,18 +317,14 @@ class UKF_Estimator:
         return x_update, P_update
 
     def ukf_update_gazebo_gt(self, x_pred, P_pred, sigma_pred, z_pose, z_vel):
-        # 1. Direct Ground Truth Injection for Kinematics (Eliminates dead-reckoning drift)
         x_update = x_pred.copy()
-        
-        # Directly set position and orientation from Gazebo GT to prevent integration drift
+
         x_update[self.idx_pN] = np.asarray(z_pose[:3], dtype=np.float64).reshape(3)
         x_update[self.idx_qN] = self._normalize_quaternion(z_pose[3:])
         
-        # Directly set linear and angular velocity from GT (or let velocity update via UKF)
         x_update[self.idx_vB] = np.asarray(z_vel[:3], dtype=np.float64).reshape(3)
         x_update[self.idx_wB] = np.asarray(z_vel[3:], dtype=np.float64).reshape(3)
 
-        # Keep covariance bounded and positive definite
         P_update = (P_pred + P_pred.T) / 2.0
         P_update = np.nan_to_num(P_update, nan=1e-3, posinf=1.0, neginf=-1.0)
         P_update += 1e-5 * np.eye(self.ukf_state)

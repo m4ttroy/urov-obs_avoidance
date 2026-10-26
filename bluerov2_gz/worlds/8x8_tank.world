@@ -2,15 +2,6 @@
 <sdf version="1.6">
   <world name="bluerov2_ping">
 
-    <spherical_coordinates>
-      <surface_model>EARTH_WGS84</surface_model>
-      <world_frame_orientation>ENU</world_frame_orientation>
-      <latitude_deg>0.0000</latitude_deg>   <!-- Middle of the ocean (Null Island) -->
-      <longitude_deg>0.0000</longitude_deg>
-      <elevation>0</elevation>
-      <heading_deg>0</heading_deg>
-    </spherical_coordinates>
-
     <!-- Base Gazebo plugins -->
     <plugin
         filename="gz-sim-physics-system"
@@ -51,19 +42,6 @@
       </graded_buoyancy>
       <!-- Enable by model name -->
       <enable>bluerov2_ping</enable>
-    </plugin>
-
-    <!-- Hydrodynamics and water current -->
-    <plugin
-        filename="gz-sim-hydrodynamics-system"
-        name="gz::sim::systems::Hydrodynamics">
-
-      <!-- Initial water current: 0.3 m/s along world +X -->
-      <default_current>0.15 -0.2 0.2</default_current>
-
-      <!-- Apply hydrodynamic effects to the ROV -->
-      <enable>bluerov2_ping</enable>
-
     </plugin>
 
     <include>

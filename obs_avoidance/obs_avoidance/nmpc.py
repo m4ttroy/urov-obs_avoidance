@@ -16,15 +16,16 @@ from mavros_msgs.msg import PositionTarget
 from std_msgs.msg import Float32MultiArray, Header
 from visualization_msgs.msg import Marker, MarkerArray
 
+from .parameter import *
+
 
 class NMPCController:
     def __init__(self, horizon=50, dt=0.04, max_speed=1.00, max_obstacles=0):
         self.N = int(horizon)
         self.dt = float(dt)
-        self.max_speed = abs(float(max_speed))
+        max_speed = abs(float(max_speed))
         self.max_obstacles = int(max_obstacles)
 
-        # First-order approximation of the inner velocity-loop response.
         self.tau_u = 0.5
         self.tau_v = 0.5
         self.tau_w = 0.5
@@ -97,8 +98,8 @@ class NMPCController:
         cost += ca.mtimes([terminal_vel.T, Q_terminal_vel, terminal_vel])
         opti.minimize(cost)
 
-        opti.subject_to(opti.bounded(-self.max_speed, U[0, :], self.max_speed))
-        opti.subject_to(opti.bounded(-self.max_speed, U[1, :], self.max_speed))
+        opti.subject_to(opti.bounded(-max_speed, U[0, :], max_speed))
+        opti.subject_to(opti.bounded(-max_speed, U[1, :], max_speed))
         opti.subject_to(opti.bounded(-0.25, U[2, :], 0.25))
 
         opts = {
@@ -176,20 +177,11 @@ def diag(lst):
 
 class ObstacleAvoidanceController:
     def __init__(self, pool_bounds=None, wall_margin=0.50):
-        self.obstacle_diameter = 0.25
-        self.rov_width_margin = 0.17
-        self.safety_clearance = 0.30
-        self.total_bypass_offset = self.rov_width_margin + self.obstacle_diameter / 2.0 + self.safety_clearance
         self.barrier_radius = 0.30
-        self.sensor_offset_x = 0.16
-        self.sensor_offset_y = 0.00
-        self.beam_angles = [-0.148, -0.074, 0.0, 0.074, 0.148]
         self.sonar_ranges = []
-        self.detection_range = 2.5
         self.cluster_gap = 2.5
         self.cluster_corridor = 1.45
-        self.sonar_wall_offset = 0.40
-        self.max_speed = 1.00
+        max_speed = 1.00
         self.braking_margin = 0.65
         self.braking_accel = 1.50
         self.pre_clearance_surge_cap = 0.22
@@ -207,7 +199,7 @@ class ObstacleAvoidanceController:
         self.locked_normal_x = 0.0
         self.locked_normal_y = 1.0
         self.locked_bypass_sign = 1.0
-        self.locked_bypass_offset = self.total_bypass_offset
+        self.locked_bypass_offset = total_bypass_offset
         self.locked_obstacles = []
         self.pass_end_progress = 0.8
         self.pass_length = 0.8
@@ -230,7 +222,7 @@ class ObstacleAvoidanceController:
     def update_sonar(self, ranges, angle_min=None, angle_increment=None):
         if len(ranges) != 5:
             self.sonar_ranges = []
-            self.beam_angles = []
+            beam_angles = []
             return
 
         def sanitize(value):
@@ -250,7 +242,7 @@ class ObstacleAvoidanceController:
             [(angles[i], sanitize(ranges[i])) for i in range(5)],
             key=lambda beam: beam[0], reverse=True,
         )
-        self.beam_angles = [angle for angle, _ in beams]
+        beam_angles = [angle for angle, _ in beams]
         self.sonar_ranges = [distance for _, distance in beams]
 
     @staticmethod
@@ -282,7 +274,7 @@ class ObstacleAvoidanceController:
                 for point in cluster
             ]
             required_offset = max(
-                self.total_bypass_offset,
+                total_bypass_offset,
                 max((sign * cross for cross in cross_values), default=0.0)
                 + self.barrier_radius + 0.08,
             )
@@ -319,10 +311,10 @@ class ObstacleAvoidanceController:
     def _scan_obstacle(self, x_rov, y_rov, yaw, i_min, r_min):
         if i_min is None or not math.isfinite(r_min):
             return None
-        theta = self.beam_angles[i_min] if len(self.beam_angles) == 5 else 0.0
+        theta = beam_angles[i_min] if len(beam_angles) == 5 else 0.0
         c, s = math.cos(yaw), math.sin(yaw)
-        sx = x_rov + self.sensor_offset_x * c - self.sensor_offset_y * s
-        sy = y_rov + self.sensor_offset_x * s + self.sensor_offset_y * c
+        sx = x_rov + sensor_offset_x * c - sensor_offset_y * s
+        sy = y_rov + sensor_offset_x * s + sensor_offset_y * c
         return (sx + r_min * math.cos(yaw + theta),
                 sy + r_min * math.sin(yaw + theta))
 
@@ -330,7 +322,7 @@ class ObstacleAvoidanceController:
                        allow_lateral=True, path_dx=1.0, path_dy=0.0):
         ux, uy, nx, ny = self._basis(path_dx, path_dy, yaw)
         result = {
-            'u_det': 0.0, 'surge_limit': self.max_speed, 'braking_active': False,
+            'u_det': 0.0, 'surge_limit': max_speed, 'braking_active': False,
             'x_ref': target_x, 'y_ref': target_y, 'e_det': 0.0, 'y_det': 0,
             'i_min': None, 'obstacle_xy': (0.0, 0.0), 'obstacles_xy': [],
             'obs_active': 0.0, 'blocked': False, 'reason': 'no_relevant_obstacle',
@@ -346,18 +338,18 @@ class ObstacleAvoidanceController:
         result['i_min'] = i_min
 
         c, s = math.cos(yaw), math.sin(yaw)
-        sx = x_rov + self.sensor_offset_x * c - self.sensor_offset_y * s
-        sy = y_rov + self.sensor_offset_x * s + self.sensor_offset_y * c
+        sx = x_rov + sensor_offset_x * c - sensor_offset_y * s
+        sy = y_rov + sensor_offset_x * s + sensor_offset_y * c
         expected_range = max(0.0, (target_x - sx) * c + (target_y - sy) * s)
         endpoint_wall_return = (
-            math.isfinite(r_min) and 0.0 < expected_range <= self.detection_range + self.endpoint_wall_tolerance
+            math.isfinite(r_min) and 0.0 < expected_range <= detection_range + self.endpoint_wall_tolerance
             and r_min >= max(0.0, expected_range - self.endpoint_wall_tolerance)
         )
         sonar_point = None
         sonar_valid = (
-            math.isfinite(r_min) and r_min <= self.detection_range
+            math.isfinite(r_min) and r_min <= detection_range
             and not endpoint_wall_return
-            and (expected_range - r_min + self.sonar_wall_offset > 0.5)
+            and (expected_range - r_min + sonar_wall_offset > 0.5)
         )
         if sonar_valid:
             sonar_point = self._scan_obstacle(x_rov, y_rov, yaw, i_min, r_min)
@@ -482,13 +474,13 @@ class ObstacleAvoidanceController:
                     surge_limit = min(surge_limit, range_speed_limit)
                 braking_active = True
             else:
-                surge_limit = self.max_speed
+                surge_limit = max_speed
                 braking_active = False
 
             result.update({
                 'surge_limit': surge_limit,
                 'braking_active': braking_active,
-                'e_det': max(0.0, self.detection_range - r_min) if math.isfinite(r_min) else 0.0,
+                'e_det': max(0.0, detection_range - r_min) if math.isfinite(r_min) else 0.0,
                 'y_det': int(-side),
                 'obstacle_xy': (self.locked_obstacle_x, self.locked_obstacle_y),
                 'obstacles_xy': self._unique_points(self.locked_obstacles, 0.20),
@@ -503,73 +495,31 @@ class ObstacleAvoidanceController:
 
 
 class SurveyPathFollower(Node):
-    """ROS 2 Node managing NMPC execution for the BlueROV2 survey mission with analysis publishers."""
     def __init__(self):
         super().__init__('survey_path_follower_nmpc')
 
-        # Parameters
-        self.declare_parameter('pose_topic', '/model/bluerov2_ping/pose')
-        self.declare_parameter('pose_odom', '/model/bluerov2_ping/odometry')
-        self.declare_parameter('sonar_topic', '/ping_link/sensor/sonar')
-        self.declare_parameter('setpoint_topic', '/mavros/setpoint_raw/local')
-        self.declare_parameter('control_rate', 50.0)
-        self.declare_parameter('target_depth', -5.0)
-        self.declare_parameter('start_x', 0.0)
-        self.declare_parameter('start_y', 0.0)
-        self.declare_parameter('max_speed', 1.00)
-        self.declare_parameter('max_accel', 1.50)
-        self.declare_parameter('emergency_decel', 1.50)
-        self.declare_parameter('acceptance_radius', 0.20)
-        self.declare_parameter('yaw_tolerance_deg', 5.00)
-        self.declare_parameter('yaw_hold_seconds', 1.5)
-        self.declare_parameter('debug_period', 1.0)
-        self.declare_parameter('settle_speed_threshold', 0.08)
-        self.declare_parameter('settle_duration', 0.50)
-
-        self.pose_topic = self.get_parameter('pose_topic').value
-        self.odom_topic = self.get_parameter('pose_odom').value
-        self.sonar_topic = self.get_parameter('sonar_topic').value
-        self.setpoint_topic = self.get_parameter('setpoint_topic').value
-
-        self.control_rate = float(self.get_parameter('control_rate').value)
-        self.target_depth = float(self.get_parameter('target_depth').value)
-        self.start_x = float(self.get_parameter('start_x').value)
-        self.start_y = float(self.get_parameter('start_y').value)
-        self.max_speed = float(self.get_parameter('max_speed').value)
-        self.max_accel = float(self.get_parameter('max_accel').value)
-        self.emergency_decel = float(self.get_parameter('emergency_decel').value)
-        self.acceptance_radius = float(self.get_parameter('acceptance_radius').value)
-
-        self.yaw_tolerance = math.radians(float(self.get_parameter('yaw_tolerance_deg').value))
-        self.yaw_hold_seconds = float(self.get_parameter('yaw_hold_seconds').value)
-        self.debug_period = float(self.get_parameter('debug_period').value)
-        self.settle_speed_threshold = float(self.get_parameter('settle_speed_threshold').value)
-        self.settle_duration = float(self.get_parameter('settle_duration').value)
-
-        dt_ctrl = 1.0 / self.control_rate
-        self.nmpc = NMPCController(horizon=25, dt=dt_ctrl, max_speed=self.max_speed, max_obstacles=8)
-        warmup_state = [self.start_x, self.start_y, self.target_depth, 0.0, 0.0, 0.0, 0.0]
+        dt_ctrl = 1.0 / control_rate
+        self.nmpc = NMPCController(horizon=25, dt=dt_ctrl, max_speed=max_speed, max_obstacles=8)
+        warmup_state = [0.0, 0.0, target_depth, 0.0, 0.0, 0.0, 0.0]
         if not self.nmpc.warmup(warmup_state):
             self.get_logger().warning(f'NMPC solver warm-up failed: {self.nmpc.last_error or "unknown error"}')
 
         self.obstacle_controller = ObstacleAvoidanceController()
-        self.obstacle_controller.max_speed = self.max_speed
+        self.obstacle_controller.max_speed = max_speed
         self.detection_enabled = False
 
-        # ROS Interfaces & Analysis Publishers
-        self.sub_pose = self.create_subscription(PoseStamped, self.pose_topic, self.pose_callback, qos_profile_sensor_data)
-        self.sub_odom = self.create_subscription(Odometry, self.odom_topic, self.odom_callback, qos_profile_sensor_data)
-        self.sub_sonar = self.create_subscription(LaserScan, self.sonar_topic, self.sonar_callback, qos_profile_sensor_data)
-        self.pub_setpoint = self.create_publisher(PositionTarget, self.setpoint_topic, 30)
+        # ---------------- Subscribers ----------------
+        self.sub_pose  = self.create_subscription(PoseStamped, "/model/bluerov2_ping/pose", self.pose_callback, qos_profile_sensor_data)
+        self.sub_odom  = self.create_subscription(Odometry, "/model/bluerov2_ping/odometry", self.odom_callback, qos_profile_sensor_data)
+        self.sub_sonar = self.create_subscription(LaserScan, "/ping_link/sensor/sonar", self.sonar_callback, qos_profile_sensor_data)
 
-        # ---------------- Analysis Publishers ----------------
-        self.pub_path_gt = self.create_publisher(Path, '/analysis/gt_path', 30)
-        self.pub_path_ref = self.create_publisher(Path, '/analysis/ref_path', 30)
-        self.pub_depth = self.create_publisher(Float32MultiArray, '/analysis/depth_tracking', 30)
-        self.pub_velocity = self.create_publisher(Float32MultiArray, '/analysis/velocity_tracking', 30)
-        self.pub_error = self.create_publisher(Float32MultiArray, '/analysis/errors', 30)
+        # ---------------- Publishers ----------------
+        self.pub_setpoint     = self.create_publisher(PositionTarget, "/mavros/setpoint_raw/local", 30)
+        self.pub_depth        = self.create_publisher(Float32MultiArray, '/analysis/depth_tracking', 30)
+        self.pub_velocity     = self.create_publisher(Float32MultiArray, '/analysis/velocity_tracking', 30)
+        self.pub_error        = self.create_publisher(Float32MultiArray, '/analysis/errors', 30)
         self.pub_object_recon = self.create_publisher(MarkerArray, '/analysis/object_reconstruction', 30)
-        self.pub_solve_time = self.create_publisher(Float32MultiArray, '/analysis/solve_time', 30)
+        self.pub_solve_time   = self.create_publisher(Float32MultiArray, '/analysis/solve_time', 30)
         # -----------------------------------------------------
 
         self.timer = self.create_timer(dt_ctrl, self.control_loop)
@@ -589,20 +539,6 @@ class SurveyPathFollower(Node):
         self.cmd_vy = 0.0
         self.cmd_vz = 0.0
 
-        # Path buffer for visualization / analysis
-        self.gt_path_msg = Path()
-        self.gt_path_msg.header.frame_id = 'map'
-        self.ref_path_msg = Path()
-        self.ref_path_msg.header.frame_id = 'map'
-
-        # Waypoints for 8x8m pool grid
-        self.waypoints = [
-            (self.start_x, self.start_y),
-            (8.0, 0.0), (8.0, 2.0), (0.0, 2.0),
-            (0.0, 4.0), (8.0, 4.0), (8.0, 6.0),
-            (0.0, 6.0), (0.0, 8.0), (8.0, 8.0),
-        ]
-
         self.phase = 'transit'
         self.current_wp_idx = 0
         self.align_started = None
@@ -617,17 +553,7 @@ class SurveyPathFollower(Node):
         self.last_control_time = time.monotonic()
         self.last_debug_time = time.monotonic()
         self.last_bypass_log_time = 0.0
-
-        self.ref_path_msg = Path()
-        self.ref_path_msg.header.frame_id = 'map'
-        for wp in self.waypoints:
-            pose_stamped = PoseStamped()
-            pose_stamped.header.frame_id = 'map'
-            pose_stamped.pose.position.x = float(wp[0])
-            pose_stamped.pose.position.y = float(wp[1])
-            pose_stamped.pose.position.z = float(self.target_depth)
-            pose_stamped.pose.orientation.w = 1.0
-            self.ref_path_msg.poses.append(pose_stamped)
+        self.get_logger().info('BlueROV2 Obstacle-avoidance N-MPC Control.')
 
     def pose_callback(self, msg: PoseStamped):
         p = msg.pose.position
@@ -641,15 +567,6 @@ class SurveyPathFollower(Node):
         self.current_y = p.y
         self.current_z = p.z
         self.pose_received = True
-
-        # Append to GT path for analysis
-        stamp = self.get_clock().now().to_msg()
-        pose_stamped = PoseStamped()
-        pose_stamped.header.stamp = stamp
-        pose_stamped.header.frame_id = 'map'
-        pose_stamped.pose = msg.pose
-        self.gt_path_msg.header.stamp = stamp
-        self.pub_path_gt.publish(self.gt_path_msg)
 
     def odom_callback(self, msg: Odometry):
         v = msg.twist.twist.linear
@@ -684,7 +601,7 @@ class SurveyPathFollower(Node):
         dvx = vx - self.cmd_vx
         dvy = vy - self.cmd_vy
         dvz = vz - self.cmd_vz
-        a = self.max_accel if accel_limit is None else max(0.0, float(accel_limit))
+        a = max_accel if accel_limit is None else max(0.0, float(accel_limit))
         max_delta = a * max(dt, 0.0)
         dvx = max(-max_delta, min(max_delta, dvx))
         dvy = max(-max_delta, min(max_delta, dvy))
@@ -703,7 +620,7 @@ class SurveyPathFollower(Node):
             )
         else:
             detection = {
-                "u_det": 0.0, "surge_limit": self.max_speed, "braking_active": False,
+                "u_det": 0.0, "surge_limit": max_speed, "braking_active": False,
                 "x_ref": tx, "y_ref": ty, "e_det": 0.0, "y_det": 0, "i_min": None,
                 "obstacle_xy": (0.0, 0.0), "obstacles_xy": [], "obs_active": 0.0,
                 "reason": "detection_disabled",
@@ -730,7 +647,7 @@ class SurveyPathFollower(Node):
         self.pub_solve_time.publish(solve_time_msg)
 
         if detection.get("blocked", False):
-            vx, vy, vz = self.limit_velocity_change(0.0, 0.0, 0.0, dt, accel_limit=self.emergency_decel)
+            vx, vy, vz = self.limit_velocity_change(0.0, 0.0, 0.0, dt, accel_limit=emergency_decel)
         elif solved:
             u_body = min(u_opt[0] + detection["u_det"], detection["surge_limit"])
             v_body = u_opt[1]
@@ -741,11 +658,11 @@ class SurveyPathFollower(Node):
             vy_world = u_body * s + v_body * c
             vz_world = w_body
             horizontal_speed = math.hypot(vx_world, vy_world)
-            if horizontal_speed > self.max_speed > 0.0:
-                scale = self.max_speed / horizontal_speed
+            if horizontal_speed > max_speed > 0.0:
+                scale = max_speed / horizontal_speed
                 vx_world *= scale
                 vy_world *= scale
-            accel_limit = self.emergency_decel if detection.get("braking_active", False) else self.max_accel
+            accel_limit = emergency_decel if detection.get("braking_active", False) else max_accel
             vx, vy, vz = self.limit_velocity_change(vx_world, vy_world, vz_world, dt, accel_limit=accel_limit)
         else:
             vx, vy, vz = self.limit_velocity_change(0.0, 0.0, 0.0, dt)
@@ -754,22 +671,17 @@ class SurveyPathFollower(Node):
             (effective_tx - self.current_x)**2 + (effective_ty - self.current_y)**2 + (tz - self.current_z)**2
         )
 
-        # ---------------- Publish Analysis Metrics ----------------
-        # 1. Depth Tracking
         depth_msg = Float32MultiArray()
         depth_msg.data = [float(self.current_z), float(tz)]
         self.pub_depth.publish(depth_msg)
 
-        # 2. Velocity Tracking (Cmd vs Actual)
         vel_msg = Float32MultiArray()
         vel_msg.data = [float(vx), float(vy), float(vz), float(self.actual_vx), float(self.actual_vy), float(self.actual_vz)]
         self.pub_velocity.publish(vel_msg)
 
-        # 3. Errors (Euclidean Distance & Cross-Track Error)
-        # Compute cross-track error relative to segment
-        if self.phase == 'move' and self.current_wp_idx < len(self.waypoints) - 1:
-            x0, y0 = self.waypoints[self.current_wp_idx]
-            x1, y1 = self.waypoints[self.current_wp_idx + 1]
+        if self.phase == 'move' and self.current_wp_idx < len(waypoints) - 1:
+            x0, y0 = waypoints[self.current_wp_idx]
+            x1, y1 = waypoints[self.current_wp_idx + 1]
             num = abs((y1 - y0)*self.current_x - (x1 - x0)*self.current_y + x1*y0 - y1*x0)
             den = math.hypot(y1 - y0, x1 - x0)
             cross_track_err = num / den if den > 1e-6 else 0.0
@@ -780,7 +692,6 @@ class SurveyPathFollower(Node):
         err_msg.data = [float(distance), float(cross_track_err), float(abs(self.current_z - tz))]
         self.pub_error.publish(err_msg)
 
-        # 4. Object Reconstruction Markers (Cylinder with known diameter = 0.25m)
         if obs_positions:
             marker_array = MarkerArray()
             for idx, obs in enumerate(obs_positions):
@@ -852,12 +763,12 @@ class SurveyPathFollower(Node):
         return math.sqrt(self.actual_vx**2 + self.actual_vy**2 + self.actual_vz**2)
 
     def distance_to_waypoint(self, waypoint_index):
-        tx, ty = self.waypoints[waypoint_index]
-        return math.sqrt((tx - self.current_x)**2 + (ty - self.current_y)**2 + (self.target_depth - self.current_z)**2)
+        tx, ty = waypoints[waypoint_index]
+        return math.sqrt((tx - self.current_x)**2 + (ty - self.current_y)**2 + (target_depth - self.current_z)**2)
 
     def log_debug(self, tx, ty, tz, vx, vy, vz, distance, yaw_target):
         now = time.monotonic()
-        if now - self.last_debug_time < self.debug_period:
+        if now - self.last_debug_time < debug_period:
             return
         self.last_debug_time = now
         forward_ranges = self.obstacle_controller.sonar_ranges[1:4]
@@ -872,12 +783,12 @@ class SurveyPathFollower(Node):
         )
 
     def begin_alignment(self, waypoint_index):
-        if waypoint_index >= len(self.waypoints) - 1:
+        if waypoint_index >= len(waypoints) - 1:
             self.phase = 'complete'
             self.reset_command_velocity()
             return
-        x0, y0 = self.waypoints[waypoint_index]
-        x1, y1 = self.waypoints[waypoint_index + 1]
+        x0, y0 = waypoints[waypoint_index]
+        x1, y1 = waypoints[waypoint_index + 1]
         self.align_yaw = math.atan2(y1 - y0, x1 - x0)
         self.align_started = time.monotonic()
         self.phase = 'align'
@@ -888,37 +799,34 @@ class SurveyPathFollower(Node):
         dt = min(max(now - self.last_control_time, 0.0), 0.2)
         self.last_control_time = now
 
-        self.ref_path_msg.header.stamp = self.get_clock().now().to_msg()
-        self.pub_path_ref.publish(self.ref_path_msg)
-
         if not self.pose_received:
             return
 
         if self.phase == 'transit':
-            tx, ty = self.waypoints[0]
-            tz = self.target_depth
+            tx, ty = waypoints[0]
+            tz = target_depth
             vx, vy, vz, distance, effective_ty, detection = self.compute_total_velocity(tx, ty, tz, dt, allow_lateral=False)
             self.publish_velocity_setpoint(vx, vy, vz, self.current_yaw)
             self.log_debug(tx, effective_ty, tz, vx, vy, vz, distance, self.current_yaw)
-            if distance <= self.acceptance_radius:
+            if distance <= acceptance_radius:
                 self.begin_settling(0, 'transit', self.current_yaw)
             return
 
         if self.phase == 'align':
             idx = self.current_wp_idx
-            tx, ty = self.waypoints[idx]
-            tz = self.target_depth
+            tx, ty = waypoints[idx]
+            tz = target_depth
             self.publish_position_hold(tx, ty, tz, self.align_yaw)
             yaw_error = abs(self.wrap_angle(self.align_yaw - self.current_yaw))
-            if (now - self.align_started) >= self.yaw_hold_seconds and yaw_error <= self.yaw_tolerance:
+            if (now - self.align_started) >= yaw_hold_seconds and yaw_error <= yaw_tolerance:
                 self.phase = 'move'
             return
 
         if self.phase == 'move':
             idx = self.current_wp_idx
-            tx, ty = self.waypoints[idx + 1]
-            tz = self.target_depth
-            x0, y0 = self.waypoints[idx]
+            tx, ty = waypoints[idx + 1]
+            tz = target_depth
+            x0, y0 = waypoints[idx]
             desired_yaw = math.atan2(ty - y0, tx - x0)
             path_dx = tx - x0
             path_dy = ty - y0
@@ -928,35 +836,35 @@ class SurveyPathFollower(Node):
             self.publish_velocity_setpoint(vx, vy, vz, desired_yaw)
             waypoint_distance = self.distance_to_waypoint(idx + 1)
             self.log_debug(tx, effective_ty, tz, vx, vy, vz, waypoint_distance, desired_yaw)
-            if waypoint_distance <= self.acceptance_radius and not self.obstacle_controller.is_bypassing:
+            if waypoint_distance <= acceptance_radius and not self.obstacle_controller.is_bypassing:
                 self.begin_settling(idx + 1, 'move', desired_yaw)
             return
 
         if self.phase == 'settle':
             target_idx = self.settle_target_idx
-            tx, ty = self.waypoints[target_idx]
-            tz = self.target_depth
+            tx, ty = waypoints[target_idx]
+            tz = target_depth
             distance = self.distance_to_waypoint(target_idx)
             speed = self.actual_speed()
             vx, vy, vz = self.limit_velocity_change(0.0, 0.0, 0.0, dt)
             self.publish_velocity_setpoint(vx, vy, vz, self.settle_yaw)
             self.log_debug(tx, ty, tz, vx, vy, vz, distance, self.settle_yaw)
 
-            if distance > self.acceptance_radius * 1.25:
+            if distance > acceptance_radius * 1.25:
                 self.phase = self.settle_return_phase
                 self.settled_since = None
                 return
 
-            if distance <= self.acceptance_radius and speed <= self.settle_speed_threshold:
+            if distance <= acceptance_radius and speed <= settle_speed:
                 if self.settled_since is None:
                     self.settled_since = now
-                elif now - self.settled_since >= self.settle_duration:
+                elif now - self.settled_since >= settle_duration:
                     if self.settle_return_phase == 'transit':
                         self.detection_enabled = True
                         self.begin_alignment(0)
                     else:
                         self.current_wp_idx = target_idx
-                        if self.current_wp_idx >= len(self.waypoints) - 1:
+                        if self.current_wp_idx >= len(waypoints) - 1:
                             self.phase = 'complete'
                             self.reset_command_velocity()
                         else:
@@ -967,8 +875,8 @@ class SurveyPathFollower(Node):
             return
 
         if self.phase == 'complete':
-            tx, ty = self.waypoints[-1]
-            tz = self.target_depth
+            tx, ty = waypoints[-1]
+            tz = target_depth
             self.publish_position_hold(tx, ty, tz, self.current_yaw)
 
 

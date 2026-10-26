@@ -1,6 +1,6 @@
 # BlueROV2 Model for Obstacle-avoidance in Gazebo Harmonic
 
-This is an obstacle-avoidance control experiment using gazebo harmonic simulation. The simulation uses BlueROV2 with ping-sonar positioned in a forward-facing position to detect an obstacle. The environment use an 8 x 8 x 8 m underwater tank with cylinder objects placed at the U-ROV intersecting survey path. The U-ROV usses GCBB survey strategy to reach the final point.
+This is an obstacle-avoidance control experiment using gazebo harmonic simulation. The simulation uses BlueROV2 with ping-sonar positioned in a forward-facing position to detect an obstacle. The environment use an 8 x 8 x 8 m underwater tank with cylinder objects placed at the U-ROV intersecting survey path. The U-ROV usses BCPP survey strategy to reach the final point.
 
 The BlueROV2 model already include the BuoyancyPlugin, HydrodynamicsPlugin and ThrusterPlugin to better simulate the implementation.
 

@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>bluerov2_gz</name>
-  <version>1.0</version>
+  <version>1.0.0</version>
   <description>BlueROV2 model for Obstacle-avoidance Control</description>
   <maintainer email="matthew.troy271@gmail.com">Matthew Troy</maintainer>
   <license>MIT</license>
