@@ -71,7 +71,6 @@ N.B. for PID you can add extra argument --args -p enable_model:False to use UKF 
 ## References
 
 * https://github.com/ardupilot/ardupilot_gazebo/wiki
-*
 * https://github.com/clydemcqueen/bluerov2_gz.githttps://gazebosim.org/docs/harmonic/install
 * https://ardupilot.org/dev/docs/building-setup-linux.html
 * https://ardupilot.org/dev/docs/setting-up-sitl-on-linux.html
