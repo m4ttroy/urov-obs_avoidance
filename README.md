@@ -57,7 +57,7 @@ Use this command to bridge the Gazebo topics to ROS2 topics for topic subscriber
 Once Gazebo has been launched, you can directly send the control commands to the BlueROV2 model in Gazebo via mavproxy to arm and enter GUIDED mode, then open a new terminal and run the controller
 
 ~~~bash
-ros2 run obs_avoid "control" 
+ros2 run obs_avoidance "control" 
 ~~~
 
 Change the "control" to the controller matching your option
