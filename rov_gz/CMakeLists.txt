@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.12.2)
-project(bluerov2_gz)
+project(rov_gz)
 
 find_package(ament_cmake_auto REQUIRED)
 
