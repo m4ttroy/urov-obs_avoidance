@@ -10,6 +10,8 @@ sdist/
 log/
 install/
 
+test/
+
 .vscode/
 .idea/
 *.swp

@@ -1,0 +1,23 @@
+<launch>
+  <node pkg="tf2_ros" exec="static_transform_publisher"
+        args="--x 0.22 --y 0 --z 0 --roll 0 --pitch 0 --yaw 0 --frame-id base_link --child-frame-id camera_link"/>
+
+  <!-- depth + color + infra1 (colocated in sim, offset to the left imager) -->
+  <node pkg="tf2_ros" exec="static_transform_publisher"
+        args="--x 0 --y 0.0475 --z 0 --roll 0 --pitch 0 --yaw 0 --frame-id camera_link --child-frame-id camera_depth_frame"/>
+  <node pkg="tf2_ros" exec="static_transform_publisher"
+        args="--x 0 --y 0 --z 0 --roll -1.5708 --pitch 0 --yaw -1.5708 --frame-id camera_depth_frame --child-frame-id camera_depth_optical_frame"/>
+  <node pkg="tf2_ros" exec="static_transform_publisher"
+        args="--x 0 --y 0 --z 0 --roll -1.5708 --pitch 0 --yaw -1.5708 --frame-id camera_depth_frame --child-frame-id camera_color_optical_frame"/>
+  <node pkg="tf2_ros" exec="static_transform_publisher"
+        args="--x 0 --y 0 --z 0 --roll -1.5708 --pitch 0 --yaw -1.5708 --frame-id camera_depth_frame --child-frame-id camera_infra1_optical_frame"/>
+
+  <!-- infra2 (right imager, 95 mm baseline) -->
+  <node pkg="tf2_ros" exec="static_transform_publisher"
+        args="--x 0 --y -0.0475 --z 0 --roll 0 --pitch 0 --yaw 0 --frame-id camera_link --child-frame-id camera_infra2_frame"/>
+  <node pkg="tf2_ros" exec="static_transform_publisher"
+        args="--x 0 --y 0 --z 0 --roll -1.5708 --pitch 0 --yaw -1.5708 --frame-id camera_infra2_frame --child-frame-id camera_infra2_optical_frame"/>
+
+  <node pkg="tf2_ros" exec="static_transform_publisher"
+        args="--x 0 --y 0 --z 0 --roll 0 --pitch 0 --yaw 0 --frame-id camera_link --child-frame-id camera_imu_optical_frame"/>
+</launch>

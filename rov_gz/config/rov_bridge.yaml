@@ -1,0 +1,89 @@
+- ros_topic_name: /clock
+  gz_topic_name: /clock
+  ros_type_name: rosgraph_msgs/msg/Clock"
+  gz_type_name: gz.msgs.Clock
+  direction: GZ_TO_ROS
+
+- ros_topic_name: /model/bluerov2_ping/pose
+  gz_topic_name: /model/bluerov2_ping/pose
+  ros_type_name: geometry_msgs/msg/PoseStamped
+  gz_type_name: gz.msgs.Pose
+  direction: GZ_TO_ROS
+
+- ros_topic_name: /model/bluerov2_ping/odometry
+  gz_topic_name: /model/bluerov2_ping/odometry
+  ros_type_name: nav_msgs/msg/Odometry
+  gz_type_name: gz.msgs.Odometry
+  direction: GZ_TO_ROS
+
+- ros_topic_name: /ping_link/sensor/sonar
+  gz_topic_name: /ping_link/sensor/sonar
+  ros_type_name: sensor_msgs/msg/LaserScan
+  gz_type_name: gz.msgs.LaserScan
+  direction: GZ_TO_ROS
+
+- ros_topic_name: /world/bluerov2_ping/model/bluerov2_ping/link/base_link/sensor/imu_sensor/imu
+  gz_topic_name: /world/bluerov2_ping/model/bluerov2_ping/link/base_link/sensor/imu_sensor/imu
+  ros_type_name: sensor_msgs/msg/Imu
+  gz_type_name: gz.msgs.IMU
+  direction: GZ_TO_ROS
+
+- ros_topic_name: /camera/color/image_raw
+  gz_topic_name: /camera/image
+  ros_type_name: sensor_msgs/msg/Image
+  gz_type_name: gz.msgs.Image
+  direction: GZ_TO_ROS
+
+- ros_topic_name: /camera/color/camera_info
+  gz_topic_name: /camera/camera_info
+  ros_type_name: sensor_msgs/msg/CameraInfo
+  gz_type_name: gz.msgs.CameraInfo
+  direction: GZ_TO_ROS
+
+- ros_topic_name: /camera/depth/image_rect_raw
+  gz_topic_name: /camera/depth_image
+  ros_type_name: sensor_msgs/msg/Image
+  gz_type_name: gz.msgs.Image
+  direction: GZ_TO_ROS
+
+- ros_topic_name: /camera/depth/camera_info
+  gz_topic_name: /camera/camera_info
+  ros_type_name: sensor_msgs/msg/CameraInfo
+  gz_type_name: gz.msgs.CameraInfo
+  direction: GZ_TO_ROS
+
+- ros_topic_name: /camera/depth/color/points
+  gz_topic_name: /camera/points
+  ros_type_name: sensor_msgs/msg/PointCloud2
+  gz_type_name: gz.msgs.PointCloudPacked
+  direction: GZ_TO_ROS
+
+- ros_topic_name: /camera/infra1/image_rect_raw
+  gz_topic_name: /camera/infra1/image
+  ros_type_name: sensor_msgs/msg/Image
+  gz_type_name: gz.msgs.Image
+  direction: GZ_TO_ROS
+
+- ros_topic_name: /camera/infra1/camera_info
+  gz_topic_name: /camera/infra1/camera_info
+  ros_type_name: sensor_msgs/msg/CameraInfo
+  gz_type_name: gz.msgs.CameraInfo
+  direction: GZ_TO_ROS
+
+- ros_topic_name: /camera/infra2/image_rect_raw
+  gz_topic_name: /camera/infra2/image
+  ros_type_name: sensor_msgs/msg/Image
+  gz_type_name: gz.msgs.Image
+  direction: GZ_TO_ROS
+
+- ros_topic_name: /camera/infra2/camera_info
+  gz_topic_name: /camera/infra2/camera_info
+  ros_type_name: sensor_msgs/msg/CameraInfo
+  gz_type_name: gz.msgs.CameraInfo
+  direction: GZ_TO_ROS
+
+- ros_topic_name: /camera/imu
+  gz_topic_name: /camera/imu
+  ros_type_name: sensor_msgs/msg/Imu
+  gz_type_name: gz.msgs.IMU
+  direction: GZ_TO_ROS
