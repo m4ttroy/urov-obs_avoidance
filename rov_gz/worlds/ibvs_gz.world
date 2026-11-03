@@ -1,0 +1,165 @@
+<?xml version="1.0" ?>
+<sdf version="1.9">
+  <world name="ibvs_gz">
+
+    <!-- Physics -->
+    <physics name="default_physics" type="ignored">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+
+    <!-- Gazebo plugins -->
+    <plugin
+        filename="gz-sim-physics-system"
+        name="gz::sim::systems::Physics">
+    </plugin>
+    <plugin
+        filename="gz-sim-user-commands-system"
+        name="gz::sim::systems::UserCommands">
+    </plugin>
+    <plugin
+        filename="gz-sim-scene-broadcaster-system"
+        name="gz::sim::systems::SceneBroadcaster">
+    </plugin>
+
+    <!-- IMU plugin manages all IMU sensors -->
+    <plugin filename="libgz-sim-imu-system.so"
+            name="gz::sim::systems::Imu">
+    </plugin>
+
+    <!-- Required for gpu_lidar sensor, emulating the Ping sonar sensor -->
+    <plugin
+      filename="gz-sim-sensors-system"
+      name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+
+    <!-- Buoyancy plugin manages buoyancy for all models -->
+    <plugin
+        filename="gz-sim-buoyancy-system"
+        name="gz::sim::systems::Buoyancy">
+      <!-- Fluid density is 1 (air) above 0 and 1000 (water) below 0 -->
+      <graded_buoyancy>
+        <default_density>1000</default_density>
+        <density_change>
+          <above_depth>0</above_depth>
+          <density>1</density>
+        </density_change>
+      </graded_buoyancy>
+      <!-- Enable by model name -->
+      <enable>bluerov2_ping</enable>
+    </plugin>
+
+    <include>
+      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Sun</uri>
+    </include>
+
+    <!-- 8 x 8 x 8 m underwater tank -->
+    <model name="underwater_tank">
+      <static>true</static>
+      <pose>4.0 4.0 -4 0 0 0</pose>
+      <link name="floor">
+        <pose>0 0 -4.0 0 0 0</pose>
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>9.4 9.4 0.2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>9.4 9.4 0.2</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.18 0.25 0.30 1</ambient>
+            <diffuse>0.18 0.25 0.30 1</diffuse>
+            <specular>0.25 0.25 0.25 1</specular>
+          </material>
+        </visual>
+      </link>
+
+      <!-- Left wall -->
+      <link name="wall_left">
+        <pose>-4.6 0 0 0 0 0</pose>
+        <collision name="collision">
+          <geometry><box><size>0.2 9.4 8</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>0.2 9.4 8</size></box></geometry>
+          <transparency>0.35</transparency>
+          <material>
+            <ambient>0.25 0.75 0.85 0.35</ambient>
+            <diffuse>0.25 0.75 0.85 0.35</diffuse>
+            <specular>0.8 0.9 1.0 0.35</specular>
+          </material>
+        </visual>
+      </link>
+
+      <!-- Right wall -->
+      <link name="wall_right">
+        <pose>4.6 0 0 0 0 0</pose>
+        <collision name="collision">
+          <geometry><box><size>0.2 9.4 8</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>0.2 9.4 8</size></box></geometry>
+          <transparency>0.35</transparency>
+          <material>
+            <ambient>0.25 0.75 0.85 0.35</ambient>
+            <diffuse>0.25 0.75 0.85 0.35</diffuse>
+            <specular>0.8 0.9 1.0 0.35</specular>
+          </material>
+        </visual>
+      </link>
+
+      <!-- Front wall -->
+      <link name="wall_front">
+        <pose>0 -4.6 0 0 0 0</pose>
+        <collision name="collision">
+          <geometry><box><size>9.4 0.2 8</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>9.4 0.2 8</size></box></geometry>
+          <transparency>0.35</transparency>
+          <material>
+            <ambient>0.25 0.75 0.85 0.35</ambient>
+            <diffuse>0.25 0.75 0.85 0.35</diffuse>
+            <specular>0.8 0.9 1.0 0.35</specular>
+          </material>
+        </visual>
+      </link>
+
+      <!-- Back wall -->
+      <link name="wall_back">
+        <pose>0 4.6 0 0 0 0</pose>
+        <collision name="collision">
+          <geometry><box><size>9.4 0.2 8</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>9.4 0.2 8</size></box></geometry>
+          <transparency>0.35</transparency>
+          <material>
+            <ambient>0.25 0.75 0.85 0.35</ambient>
+            <diffuse>0.25 0.75 0.85 0.35</diffuse>
+            <specular>0.8 0.9 1.0 0.35</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- BlueROV2 Ping -->
+    <include>
+      <uri>model://supri</uri>
+      <pose>4.5 4.5 -1 0 0 0</pose>
+    </include>
+
+    <include>
+      <uri>model://apriltag_36h11</uri>
+      <pose>8.49 4.0 -5.0 1.5707963 0 0</pose>
+    </include>
+
+  </world>
+</sdf>

@@ -46,7 +46,7 @@
         <geometry>
           <mesh>
             <uri>model://supri/meshes/supri_rov.glb</uri>
-            <scale>0.025 0.025 0.025</scale>
+            <scale>0.001 0.001 0.001</scale>
           </mesh>
         </geometry>
       </visual>
@@ -518,7 +518,7 @@
         <index>1</index>
         <topic>ping_link/sensor/sonar</topic>
       </sensor>
-      
+
     </plugin>
 
   </model>

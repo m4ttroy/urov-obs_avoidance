@@ -3,8 +3,8 @@
 # Directory location
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 workspace_src_dir="$(cd "$script_dir/../../../.." && pwd)"
-ARDUPILOT_GAZEBO="${ARDUPILOT_GAZEBO:-$workspace_src_dir/ardupilot_gazebo}"
-ARDUPILOT_HOME="${ARDUPILOT_GAZEBO:-$workspace_src_dir/ardupilot}"
+ARDUPILOT_GAZEBO="${ARDUPILOT_GAZEBO:-$HOME/ardupilot_gazebo}"
+ARDUPILOT_HOME="${ARDUPILOT_GAZEBO:-$HOME/Ardusupri}"
 
 export GZ_VERSION=harmonic
 
@@ -12,7 +12,7 @@ export GZ_VERSION=harmonic
 export PATH="$ARDUPILOT_HOME/build/sitl/bin:$PATH"
 
 # Navigate to sim_vehicle.py
-export PATH="$PATH:${ARDUPILOT_HOME}/ardupilot/Tools/autotest"
+export PATH="$PATH:${ARDUPILOT_HOME}/Tools/autotest"
 
 # Add bluerov2_gz models and worlds
 export GZ_SIM_RESOURCE_PATH="$script_dir/models:$script_dir/worlds:$GZ_SIM_RESOURCE_PATH"
